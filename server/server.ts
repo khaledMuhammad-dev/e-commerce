@@ -1,4 +1,5 @@
 import express from "express";
+import fileUpload from "express-fileupload";
 import cors from "cors";
 import wishListRouter from "./routes/wishlist.route";
 import cartRouter from "./routes/cart.route";
@@ -11,8 +12,9 @@ const log = console.log;
 app.use(cors());
 app.use(express.json());
 
+app.use(fileUpload())
 
-
+app.use( express.static("./public") );
 /** Product Routes */
 // product route set here
 app.use("/api/v1/product", productRouter);
