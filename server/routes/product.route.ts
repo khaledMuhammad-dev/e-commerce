@@ -3,22 +3,25 @@ import {
     addProduct, 
     getAllProducts, 
     getSingleProduct, 
-    removeProduct, 
+    destroyProduct, 
     updateProduct, 
     uploadImage 
 } from '../controllers/product.controller';
 
 const productRouter = express.Router();
 
-
-
+/** All Products */
 productRouter.route("/")
              .post( addProduct )
-             .get( getAllProducts )
-             .put( updateProduct )
-             .delete( removeProduct );
+             .get( getAllProducts );
 
+/** Single Products */
+productRouter.route("/:_id")
+            .get( getSingleProduct )
+            .patch( updateProduct )
+            .delete( destroyProduct );
+
+/** upload */
 productRouter.route("/uploadImage").post( uploadImage );
-productRouter.route("/:_id").get( getSingleProduct );
 
 export default productRouter;
