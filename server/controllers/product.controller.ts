@@ -1,57 +1,82 @@
-
 import { Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import { UploadedFile } from "express-fileupload";
-import product from "../model/product";
-import { checkValidation } from "../utils/checkValidation";
+import product, { ProductSchema } from "../model/product.model";
+import { checkImagesValidity } from "../utils/checkImagesValidity";
 import path from "path";
+import { BadRequestError, NotFoundError } from "../errors";
 
 
 export async function addProduct( req: Request, res: Response ) {
     const result = await product.create( req.body );
-
-    try {
-        
-        res.status( StatusCodes.CREATED ).json({ data: result, status: "SUCCESS"});
-
-    } catch( error ) {
-
-        console.log(error);
-        res.status( StatusCodes.INTERNAL_SERVER_ERROR ).json({ status: "FIALD", error });
-    }
+    res.status( StatusCodes.CREATED ).json({ data: result, status: "SUCCESS"});
 
 }
 
-export async function getAllProducts(req: Request, res: Response ) {
-
+export async function getAllProducts( req: Request, res: Response ) {
     const result = await product.find({});
+    res.status( StatusCodes.OK ).json({ data: result, status: "SUCCESS" });
 
-    try {
-        res.status( StatusCodes.OK ).json({ data: result, status: "SUCCESS"});
-
-    } catch ( error ) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: "FAILD", error });
-    }
 }
 
 export async function updateProduct( req: Request, res: Response ) {
     const { _id } = req.params;
-    const singleProduct = await product.findOneAndUpdate({ _id }, req.body);
+    const keys = Object.keys(req.body);
 
-    try {
-        res.status( StatusCodes.OK ).json({ data: singleProduct, status: "SUCCESS" });
 
-    } catch ( error ) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({status: "FAILD", error});
+    if(!Object.keys(req.body).length) {
+        throw new BadRequestError("No data received");
     }
+
+    for(const key of keys) {
+        if(!ProductSchema.hasOwnProperty(key)) 
+            throw new BadRequestError("Invalid field: " + key);
+    }
+
+    const singleProduct = await product.findOneAndUpdate({ _id }, req.body, {
+        new: true,
+        runValidators: true
+    });
+
+    if( !singleProduct ) {
+        throw new NotFoundError("Product is not found");
+    }
+
+    res.status( StatusCodes.OK ).json({ status: "SUCCESS" });
+}
+
+export async function destroyProduct(req: Request, res: Response ) {
+    const { _id } = req.params;
+
+    const deletedProduct = await product.findOneAndDelete({ _id });
+    
+    
+    if(!deletedProduct) {
+        throw new NotFoundError("The Product you are trying to delete is not found");
+    }
+
+    res.status( StatusCodes.OK ).json({ status: "SUCCESS" });
+
+}
+
+export async function getSingleProduct( req: Request, res: Response ) {
+
+    const { _id } = req.params;
+
+    const singleProduct = await product.findOne({ _id });
+    
+    if(!singleProduct) {
+        throw new NotFoundError("Product is not found");
+    }
+
+    res.status(StatusCodes.OK).json({ data: singleProduct, status: "SUCCESS" });
+
 }
 
 export async function uploadImage( req: Request, res: Response ) {
     
     if(!req.files) {
-        
-        res.status( StatusCodes.BAD_REQUEST ).json({ error: "images field is required" ,status: "FAILD" });
-        return;
+        throw new BadRequestError("Please provide a product image(s)");
     }
 
     let imgs = req.files.imgs as UploadedFile[];
@@ -61,12 +86,10 @@ export async function uploadImage( req: Request, res: Response ) {
     }
 
     // check validation
-    const isVlalid = checkValidation( imgs );
+    const isVlalid = checkImagesValidity( imgs );
     if ( !isVlalid[0] ) {
         
-        res.status( StatusCodes.BAD_REQUEST )
-           .json({ errors: isVlalid[1], status: "FAILD"});
-        return;
+        throw new BadRequestError(JSON.stringify(isVlalid[1]));
     }
      
     let paths = [];
@@ -77,39 +100,12 @@ export async function uploadImage( req: Request, res: Response ) {
             `../public/upload/img/${img.name}`
         );
 
-        paths.push(`/upload/img/${ img.name }`);
+        const url = encodeURI(`/upload/img/${ img.name }`)
+        paths.push(url);
+        
         await img.mv(imagePath);
     }
 
     res.status( StatusCodes.OK )
        .json({ images_urls: paths , status: "SUCCESS" });
-}
-
-export async function destroyProduct(req: Request, res: Response ) {
-    const { _id } = req.params;
-    const result = await product.findOneAndDelete({ _id });
-
-    try {
-
-        res.status( StatusCodes.OK ).json({ data: result, status: "SUCCESS"});
-    } catch (error) {
-        
-        res.status( StatusCodes.INTERNAL_SERVER_ERROR ).json({ status: "FAILD", error});
-    }
-
-}
-
-export async function getSingleProduct(req: Request, res: Response ) {
-
-    const { _id } = req.params;
-    const result = await product.findById(_id);
-
-    try {
-        res.status(StatusCodes.OK).json({ data: result, status: "SUCCESS" });
-
-    }catch (error) {
-        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ status: "FAILD",  error});
-
-    }
-
 }
