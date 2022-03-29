@@ -18,7 +18,7 @@ productRouter.route("/")
 /** Single Products */
 productRouter.route("/:_id")
             .get( getSingleProduct )
-            .patch( updateProduct )
+            .put( updateProduct )
             .delete( destroyProduct );
 
 /** upload */
