@@ -1,6 +1,6 @@
 import { UploadedFile } from "express-fileupload";
 
-export function checkValidation(imgs: UploadedFile[]) {
+export function checkImagesValidity(imgs: UploadedFile[]) {
     const maxSize = 1024 * 1024 * 4; // 4MB
     const errors: Errors = {
         type_error: [],
