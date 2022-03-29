@@ -1,10 +1,12 @@
 import express from "express";
+import "express-async-errors";
 import fileUpload from "express-fileupload";
 import cors from "cors";
 import wishListRouter from "./routes/wishlist.route";
 import cartRouter from "./routes/cart.route";
 import productRouter from './routes/product.route';
 import connectDB, { DB_URL } from "./db/connect";
+import errorHandlerMiddleware from "./middleware/errorHandler";
 
 const app = express();
 const log = console.log;
@@ -25,6 +27,9 @@ app.use("/api/v1/cart", cartRouter);
 /** Wish List Routes */
 app.use("/api/v1/wishlist", wishListRouter);
 
+
+/** Handle Errors */
+app.use(errorHandlerMiddleware);
 
 const port = process.env.PORT || 8000;
 
