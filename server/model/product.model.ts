@@ -4,6 +4,18 @@ interface Schema {
     [x: string]: SchemaDefinitionProperty<any> | undefined; 
 }
 
+export interface IProductSchema { 
+    title: string,
+    description: string,
+    price: number,
+    imgs: Array<string>,
+    available_pieces: number,
+    category: string, 
+    rate: number,
+    reviews_count: number,
+    discount: number
+}
+
 
 export const ProductSchema:Schema = {
     title: {
@@ -33,7 +45,7 @@ export const ProductSchema:Schema = {
     },
     category: {
         type: String,
-        enum: ["electronics", "Books", "Sports", "Children and babies", "Style and fashion", "Pets", " Beauty and Health"],
+        enum: ["electronics", "Books", "Sports", "Children and babies", "Style and fashion", "Pets", "Beauty and Health", "footwear"],
         required: [true, "Product category is required"]
     }, 
     rate: {
