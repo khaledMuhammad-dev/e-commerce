@@ -1,69 +1,84 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from "http-status-codes";
+import { BadRequestError, NotFoundError } from '../errors';
+import { ICartItem } from '../model/cart.model';
+import Cart from '../model/cart.model';
 
-interface Cart {
-    _id: number,
-    count: number
+const cart = {
+    items: [],
+    count: 0,
+    total: 0
 }
 
-const cart:Array<Cart> = [];
+export async function addCartItem( req:Request, res:Response ) {
+    const { user_id } = req.body;
 
-export function addToCart( req:Request, res:Response ) {
-    const { count } = req.body;
-    const id = typeof count === "string" ? count.trim() : count;
-
-    if( !id ) {
-        res
-        .status( StatusCodes.BAD_REQUEST )
-        .json({ error: "Please make sure of the required data" ,status: "BAD_REQUEST 💔" });
+    if(!user_id) {
+        throw new BadRequestError("Please provide a valid User id")
     }
 
-    if( !Number(id) ) {
-        
-        res
-        .status( StatusCodes.BAD_REQUEST )
-        .json({ error: "Invalid Count" ,status: "BAD_REQUEST 💔" });
-    }
-
-
-    cart.push( req.body );
-    res.status( StatusCodes.CREATED ).json({ data: req.body, status: "Success Operation 👏" });
+    await Cart.create({ ...cart, user_id }); // #user_id #items #count #total
+    res.status( StatusCodes.CREATED ).json({ status: "SUCCESS" });
 }
 
-export function getAll( req:Request, res:Response ) {
+export async function getAllCartItems( req:Request, res:Response ) {
+    const { user_id } = req.body; 
+
+    if(!user_id) {
+        throw new BadRequestError("Please provide a valid User id")
+    }
+
+    const doc = await Cart.findOne({ user_id }).populate({
+        path: "items.product_id",
+        select: "title price count description discount"
+    });
     
-    res.status( StatusCodes.OK ).json({ data: cart, status: "Success Operation 👏" });
-}
-
-export function updateItem( req:Request, res:Response ) {
-    const { _id, count } = req.body;
-    const index = cart.findIndex(item => item._id === _id);
-
-    if(index < 0) {
-        res.status(404).json({ error: "ITEM_NOT_FOUND" });
+    if(!doc) {
+        throw new NotFoundError("The Cart is not Found");
     }
 
-    cart.splice(index,1,{ _id, count });
-    res.status( StatusCodes.OK ).json({ data: req.body, length: cart.length });
+    res.status( StatusCodes.OK ).json({ data: doc, status: "SUCCESS" });
 }
 
-export function removeFromCart( req:Request, res:Response ) {
-    const { _id } = req.body;
-    const index = cart.findIndex(item => item._id === _id);
-
-    if(index < 0) {
-        res.status( StatusCodes.NOT_FOUND ).json({error: "404"});
-        throw Error("this message from the server --> 404");
+export async function updateCatItem( req:Request, res:Response ) {
+    const { user_id, product_id, count } = req.body;
+    
+    if( !user_id.trim() || !product_id.trim() || !count || !typeof count ) {
+        throw new BadRequestError("Received invalid data");
     }
 
-    cart.splice(index, 1);
-    res.status( StatusCodes.OK ).json(cart);
+    const doc = await Cart.findOne({ user_id });
+    
+    if(!doc) {
+        throw new NotFoundError("The Cart is not Found");
+    }
+
+    let items = doc.items.filter(( item: ICartItem ) => item.product_id.valueOf() !== product_id);
+    let item = { product_id, count };
+    
+    doc.items = [...items, item];
+    await doc.save();
+    res.status( StatusCodes.OK ).json({ status: "SUCCESS" });
 }
 
+export async function destroyCartItem( req:Request, res:Response ) {
+    const { user_id, product_id } = req.body;
 
-/**
- * CRUD
- * Validation
- * Errors
- * DB (MongoDB & Mongoos)
- */
+    if(!user_id.trim() || !product_id.trim()){
+        throw new BadRequestError("Received Invalid data");
+    }
+
+    const doc = await Cart.findOne({ user_id });
+    const index = doc.items.findIndex( (item: ICartItem)  => item.product_id.valueOf() === product_id)
+
+    if(!doc) {
+        throw new NotFoundError("The cart is Not Found");
+    }
+    if(index < 0){
+        throw new NotFoundError("Product is Not Found");
+    }
+
+    doc.items = doc.items.filter( (item: ICartItem)  => item.product_id.valueOf() !== product_id)
+    await doc.save();
+    res.status( StatusCodes.OK ).json({ data: doc, status: "SUCCESS" });
+}
