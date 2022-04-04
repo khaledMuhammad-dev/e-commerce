@@ -7,6 +7,7 @@ import cartRouter from "./routes/cart.route";
 import productRouter from './routes/product.route';
 import connectDB, { DB_URL } from "./db/connect";
 import errorHandlerMiddleware from "./middleware/errorHandler";
+import reviewsRouter from "./routes/reviews.route";
 
 const app = express();
 const log = console.log;
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(fileUpload());
 
 app.use( express.static("./public") );
+
 /** Product Routes */
 // product route set here
 app.use("/api/v1/product", productRouter);
@@ -26,6 +28,9 @@ app.use("/api/v1/cart", cartRouter);
 
 /** Wish List Routes */
 app.use("/api/v1/wishlist", wishListRouter);
+
+/** Reviews Routes */
+app.use("/api/v1/reviews", reviewsRouter);
 
 
 /** Handle Errors */
@@ -45,7 +50,6 @@ const startConnection = async () => {
     } catch ( error ) {
         console.log( error );
     }
-
 }
 
 
