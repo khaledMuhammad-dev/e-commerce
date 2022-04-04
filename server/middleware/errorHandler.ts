@@ -10,6 +10,7 @@ function errorHandlerMiddleware(
     next: NextFunction
 ) {
 
+
     /** State Error */
     const customError = {
         error: {
@@ -20,6 +21,10 @@ function errorHandlerMiddleware(
     }
 
 
+    if(err.code === 11000) {
+        customError.error.message = `Duplicate '${Object.keys(err.keyValue)}'`;
+        customError.statusCode = StatusCodes.BAD_REQUEST;
+    }
     /** Custom Errors */
     if( err instanceof CustomAPIError ) {
         customError.error.message = err.message;
