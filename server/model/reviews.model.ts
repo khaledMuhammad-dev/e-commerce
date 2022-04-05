@@ -9,7 +9,7 @@ const reveiwsSchema = new Schema({
     },
     product_id: {
         type: Types.ObjectId,
-        ref:"product",
+        ref: "product",
         required: [true, "Product id is required"]
     },
     comment: {
@@ -18,14 +18,14 @@ const reveiwsSchema = new Schema({
     },
     rate: {
         type: Number,
-        enum: [1 ,2, 3, 4, 5],
+        enum: [1, 2, 3, 4, 5],
         required: [true, "Rateing the product is required"]
     },
     verified: {
         type: Boolean,
         default: false
     }
-}, {timestamps: true});
+}, { timestamps: true });
 
 
-export default model( "reviews", reveiwsSchema );
+export default model("reviews", reveiwsSchema);
