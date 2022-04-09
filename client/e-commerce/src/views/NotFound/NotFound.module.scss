@@ -1,0 +1,13 @@
+
+.not_found {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+}
+
+.not_found p {
+    text-align: center;
+}

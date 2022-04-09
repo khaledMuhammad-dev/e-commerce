@@ -1,0 +1,25 @@
+@use "./vars" as *;
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    text-decoration: none;
+    list-style: none;
+    padding: 0;
+}
+
+body {
+    font-family: $bodyFonts;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body, #root {
+    min-height: 100vh;
+    min-width: 100vw;
+}
+
+code {
+    font-family: $codeFonts
+}
+  
